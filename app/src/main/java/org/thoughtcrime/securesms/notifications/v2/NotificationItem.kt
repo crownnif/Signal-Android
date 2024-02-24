@@ -368,7 +368,22 @@ class ReactionNotification(threadRecipient: Recipient, record: MessageRecord, va
   override fun getLargeIconUri(): Uri? = null
   override fun getBigPictureUri(): Uri? = null
   override fun getThumbnailInfo(context: Context): ThumbnailInfo = ThumbnailInfo()
-  override fun canReply(context: Context): Boolean = false
+  override fun canReply(context: Context): Boolean {
+    if (KeyCachingService.isLocked(context) ||
+      record.isRemoteDelete ||
+      record.isGroupCall ||
+      record.isViewOnce ||
+      record.isJoined
+    ) {
+      return false
+    }
+
+    if (record is MmsMessageRecord) {
+      return (record.isMmsNotification || record.slideDeck.slides.isEmpty()) && record.sharedContacts.isEmpty()
+    }
+
+    return true
+  }
 
   override fun toString(): String {
     return "ReactionNotification(timestamp=$timestamp, isNewNotification=$isNewNotification)"
